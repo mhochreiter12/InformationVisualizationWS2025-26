@@ -81,28 +81,29 @@ function plotChart() {
 
   // Scales
   const y = d3.scaleLinear()
-      .domain([1, d3.max(raceData, d => Math.max(d.grid, d.position)) + 0.5])
+      .domain([1, d3.max(raceData, d => Math.max(d.grid, d.position))])
       .range([0, height]);
 
   const xQuali = 100;
   const xRace = width - 100;
 
   const constructorColor = d3.scaleOrdinal([
-  "#771155", "#117744", "#AA4488", "#114477", "#CC99BB", "#4477AA", "#774411", "#77AADD", "#117777", 
-  "#44AAAA", "#77CCCC", "#44AA77", "#88CCAA", "#777711", "#AAAA44", 
-  "#DDDD77",  "#AA7744", "#DDAA77", "#771122", "#AA4455", "#DD7788"])
+  "#771155", "#114477", "#117744", "#AAAA44", "#774411", "#77CCCC", "#CC99BB", "#4477AA",  "#77AADD", "#117777", 
+  "#44AAAA",  "#44AA77", "#88CCAA", "#777711", "#DDDD77", "#AA4488", "#AA7744", "#DDAA77", "#771122", "#AA4455", "#DD7788"])
 
-  // SLOPE LINES
-  g.selectAll(".slope")
-    .data(raceData.filter(d => d.position !== null))
-    .enter()
-    .append("line")
-    .attr("x1", xQuali)
-    .attr("y1", d => y(d.grid))
-    .attr("x2", xRace)
-    .attr("y2", d => y(d.position))
-    .attr("stroke", d => constructorColor(d.constructorName))
-    .attr("stroke-width", 1);
+  // Slope lines
+g.selectAll(".slope")
+  .data(raceData.filter(d => d.position !== null))
+  .enter()
+  .append("line")
+  .attr("class", "slope")
+  .attr("data-constructor", d => d.constructorName)
+  .attr("x1", xQuali)
+  .attr("y1", d => y(d.grid))
+  .attr("x2", xRace)
+  .attr("y2", d => y(d.position))
+  .attr("stroke", d => constructorColor(d.constructorName))
+  .attr("stroke-width", 2);
 
   // Labels Starting Grid
 g.selectAll(".labelQ")
@@ -150,8 +151,8 @@ g.selectAll(".labelQ")
   .style("fill", "gray")
   .text("DNF = Did Not Finish");
 
-// ---- LEGEND ----
-g.selectAll(".legend").remove();  // remove previous legends
+// Legend
+g.selectAll(".legend").remove();
 
 const constructors = [...new Set(raceData.map(d => d.constructorName))];
 
@@ -159,25 +160,52 @@ const legend = g.append("g")
   .attr("class", "legend")
   .attr("transform", `translate(${width + 100}, 20)`);
 
-legend.selectAll("legend-item")
+const legendItems = legend.selectAll(".legend-item")
   .data(constructors)
   .enter()
   .append("g")
   .attr("class", "legend-item")
+  .attr("data-constructor", d => d)
   .attr("transform", (_, i) => `translate(0, ${i * 18})`)
-  .each(function(d) {
-    const group = d3.select(this);
+  .style("cursor", "pointer");
 
-    group.append("rect")
-      .attr("width", 12)
-      .attr("height", 12)
-      .attr("fill", constructorColor(d));
+// Legend color box
+legendItems.append("rect")
+  .attr("width", 12)
+  .attr("height", 12)
+  .attr("fill", d => constructorColor(d));
 
-    group.append("text")
-      .attr("x", 18)
-      .attr("y", 10)
-      .style("font-size", "12px")
-      .text(d);
+// Legend text
+legendItems.append("text")
+  .attr("x", 18)
+  .attr("y", 10)
+  .style("font-size", "12px")
+  .style("font-weight", "normal")
+  .text(d => d)
+  .on("mouseover", function () {
+      d3.select(this).style("font-weight", "bold");
+  })
+  .on("mouseout", function () {
+      d3.select(this).style("font-weight", "normal");
+  });
+
+// Accessibility feature: Highlight constructors on hovering
+legendItems.on("mouseover", function () {
+    const constructor = d3.select(this).attr("data-constructor");
+
+    g.selectAll(".slope")
+      .transition().duration(150)
+      .attr("stroke-opacity", d =>
+        d.constructorName === constructor ? 1 : 0.15
+      )
+      .attr("stroke-width", d =>
+        d.constructorName === constructor ? 5 : 1
+      );
+  })
+  .on("mouseout", function () {
+    g.selectAll(".slope")
+      .transition().duration(150)
+      .attr("stroke-opacity", 1)
+      .attr("stroke-width", 2);
   });
 }
-
