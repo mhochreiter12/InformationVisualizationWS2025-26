@@ -169,6 +169,13 @@ const legendItems = legend.selectAll(".legend-item")
   .attr("transform", (_, i) => `translate(0, ${i * 18})`)
   .style("cursor", "pointer");
 
+// Legend title
+legend.append("text")
+  .attr("x", 0)
+  .attr("y", -10)
+  .style("font-size", "16px")
+  .text("Constructors");
+
 // Legend color box
 legendItems.append("rect")
   .attr("width", 12)
